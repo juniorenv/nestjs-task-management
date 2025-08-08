@@ -28,13 +28,13 @@ export class TaskService {
   }
 
   public findOne(taskId: string): TaskDto {
-    const foundUser = this.tasks.find((task) => task.id === taskId);
+    const foundTask = this.tasks.find((task) => task.id === taskId);
 
-    if (!foundUser) {
+    if (!foundTask) {
       throw new NotFoundException(`Task with ID ${taskId} not found`);
     }
 
-    return foundUser;
+    return foundTask;
   }
 
   public create(task: TaskDto): TaskDto {
