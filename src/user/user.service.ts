@@ -18,4 +18,8 @@ export class UserService {
 
     return newUser;
   }
+
+  public findByUsername(username: string): UserDto | undefined {
+    return this.users.find((user) => user.username === username);
+  }
 }
