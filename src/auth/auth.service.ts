@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
-import { AuthResponseDto } from './auth.dto';
+import { AuthResponseDto, JwtPayload } from './auth.dto';
 import { compareSync } from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 
@@ -25,7 +25,7 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const payload = {
+    const payload: JwtPayload = {
       sub: foundUser.id,
       username: foundUser.username,
     };
