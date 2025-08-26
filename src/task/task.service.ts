@@ -1,5 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { FindAllParams, TaskDto } from './task.dto';
+import {
+  CreateTaskDto,
+  FindAllParams,
+  TaskDto,
+  TaskStatusEnum,
+} from './task.dto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class TaskService {
@@ -37,9 +43,15 @@ export class TaskService {
     return foundTask;
   }
 
-  public create(task: TaskDto): TaskDto {
-    this.tasks.push(task);
-    return task;
+  public create(task: CreateTaskDto): TaskDto {
+    const newTask: TaskDto = {
+      ...task,
+      id: uuidv4(),
+      status: task.status ?? TaskStatusEnum.TO_DO,
+      createdAt: new Date(),
+    };
+    this.tasks.push(newTask);
+    return newTask;
   }
 
   public update(taskId: string, updateTaskDto: TaskDto): TaskDto {

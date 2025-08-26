@@ -1,10 +1,44 @@
-export class TaskDto {
-  id: string;
+import {
+  IsDateString,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
+
+export enum TaskStatusEnum {
+  TO_DO = 'TO_DO',
+  IN_PROGRESS = 'IN_PROGRESS',
+  DONE = 'DONE',
+}
+
+export class CreateTaskDto {
+  @IsString()
+  @MinLength(4)
+  @MaxLength(256)
   title: string;
+
+  @IsString()
+  @MinLength(6)
+  @MaxLength(512)
   description: string;
+
+  @IsEnum(TaskStatusEnum)
+  @IsOptional()
   status: string;
-  createdAt: Date;
+
+  @IsDateString()
   expirationDate: Date;
+}
+
+export class TaskDto extends CreateTaskDto {
+  @IsUUID()
+  id: string;
+
+  @IsDateString()
+  createdAt: Date;
 }
 
 export interface FindAllParams {

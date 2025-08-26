@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { FindAllParams, TaskDto } from './task.dto';
+import { CreateTaskDto, FindAllParams, TaskDto } from './task.dto';
 import { TaskService } from './task.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 
@@ -30,7 +30,7 @@ export class TaskController {
   }
 
   @Post()
-  public create(@Body() task: TaskDto): TaskDto {
+  public create(@Body() task: CreateTaskDto): TaskDto {
     return this.taskService.create(task);
   }
 
