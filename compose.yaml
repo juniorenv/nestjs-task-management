@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: db
+      POSTGRES_PASSWORD: 12345
