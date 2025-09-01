@@ -1,12 +1,19 @@
-export class UserDto {
-  id: string;
+import { IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+
+export class CreateUserDto {
+  @IsString()
+  @MinLength(3)
+  @MaxLength(32)
   username: string;
+
+  @IsString()
+  @MinLength(6)
   password: string;
 }
 
-export class CreateUserDto {
-  username: string;
-  password: string;
+export class UserDto extends CreateUserDto {
+  @IsUUID()
+  id: string;
 }
 
 export interface CreateUserResponse {

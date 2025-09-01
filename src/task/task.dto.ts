@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import {
   IsDateString,
   IsEnum,
@@ -41,7 +42,32 @@ export class TaskDto extends CreateTaskDto {
   createdAt: Date;
 }
 
+export class UpdateTaskDto {
+  @IsString()
+  @MinLength(4)
+  @MaxLength(256)
+  title: string;
+
+  @IsString()
+  @MinLength(6)
+  @MaxLength(512)
+  description: string;
+
+  @IsEnum(TaskStatusEnum)
+  status: TaskStatusEnum;
+
+  @IsDateString()
+  expirationDate: Date;
+}
+
+export class PartialUpdateTaskDto extends PartialType(UpdateTaskDto) {}
+
 export interface FindAllParams {
   title?: string;
   status?: string;
+}
+
+export class TaskRouteParameters {
+  @IsUUID()
+  taskId: string;
 }
