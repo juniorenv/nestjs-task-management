@@ -10,7 +10,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { CreateTaskDto, FindAllParams, TaskDto } from './task.dto';
+import {
+  CreateTaskDto,
+  FindAllParams,
+  PartialUpdateTaskDto,
+  TaskDto,
+  TaskRouteParameters,
+  UpdateTaskDto,
+} from './task.dto';
 import { TaskService } from './task.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 
@@ -20,32 +27,38 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Get()
-  public findAll(@Query() params: FindAllParams): TaskDto[] {
-    return this.taskService.findAll(params);
+  public async findAll(@Query() params: FindAllParams): Promise<TaskDto[]> {
+    return await this.taskService.findAll(params);
   }
 
   @Get('/:taskId')
-  public findOne(@Param('taskId') taskId: string) {
-    return this.taskService.findOne(taskId);
+  public async findOne(@Param('taskId') taskId: string): Promise<TaskDto> {
+    return await this.taskService.findOne(taskId);
   }
 
   @Post()
-  public create(@Body() task: CreateTaskDto): TaskDto {
-    return this.taskService.create(task);
+  public async create(@Body() task: CreateTaskDto): Promise<TaskDto> {
+    return await this.taskService.create(task);
   }
 
   @Put('/:taskId')
-  public update(@Param('taskId') taskId: string, @Body() task: TaskDto) {
-    return this.taskService.update(taskId, task);
+  public async update(
+    @Param() params: TaskRouteParameters,
+    @Body() task: UpdateTaskDto,
+  ): Promise<TaskDto> {
+    return await this.taskService.update(params.taskId, task);
   }
 
   @Patch('/:taskId')
-  public partialUpdate(@Param('taskId') taskId: string, @Body() task: TaskDto) {
-    return this.taskService.partialUpdate(taskId, task);
+  public async partialUpdate(
+    @Param() params: TaskRouteParameters,
+    @Body() task: PartialUpdateTaskDto,
+  ): Promise<TaskDto> {
+    return await this.taskService.partialUpdate(params.taskId, task);
   }
 
   @Delete('/:taskId')
-  public delete(@Param('taskId') taskId: string): TaskDto {
+  public async delete(@Param('taskId') taskId: string): Promise<TaskDto> {
     return this.taskService.delete(taskId);
   }
 }

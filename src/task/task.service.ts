@@ -1,104 +1,114 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   CreateTaskDto,
   FindAllParams,
+  PartialUpdateTaskDto,
   TaskDto,
-  TaskStatusEnum,
+  UpdateTaskDto,
 } from './task.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { InjectRepository } from '@nestjs/typeorm';
+import { TaskEntity } from 'src/database/entities/task.entity';
+import {
+  EntityNotFoundError,
+  FindOptionsWhere,
+  Like,
+  QueryFailedError,
+  Repository,
+} from 'typeorm';
 
 @Injectable()
 export class TaskService {
-  private readonly tasks: TaskDto[] = [];
+  constructor(
+    @InjectRepository(TaskEntity)
+    private readonly tasksRepository: Repository<TaskEntity>,
+  ) {}
 
-  public findAll(params: FindAllParams): TaskDto[] {
-    return this.tasks.filter((task) => {
-      let isMatch: boolean = true;
+  public async findAll(params: FindAllParams): Promise<TaskDto[]> {
+    const searchParams: FindOptionsWhere<TaskDto> = {};
 
-      if (
-        params.title &&
-        !task.title.toLowerCase().includes(params.title.toLowerCase())
-      ) {
-        isMatch = false;
-      }
+    if (params.title) {
+      searchParams.title = Like(`%${params.title}%`);
+    }
 
-      if (
-        params.status &&
-        params.status.toLowerCase() !== task.status.toLowerCase()
-      ) {
-        isMatch = false;
-      }
+    if (params.status) {
+      searchParams.status = Like(`%${params.status}%`);
+    }
 
-      return isMatch;
+    const tasksFound = await this.tasksRepository.find({
+      where: searchParams,
     });
+
+    return tasksFound;
   }
 
-  public findOne(taskId: string): TaskDto {
-    const foundTask = this.tasks.find((task) => task.id === taskId);
+  public async findOne(taskId: string): Promise<TaskDto> {
+    try {
+      const foundTask = await this.tasksRepository.findOneOrFail({
+        where: {
+          id: taskId,
+        },
+      });
 
-    if (!foundTask) {
-      throw new NotFoundException(`Task with ID ${taskId} not found`);
+      return foundTask;
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw new NotFoundException(`Task with ID ${taskId} not found`);
+      }
+
+      if (error instanceof QueryFailedError) {
+        if (error.message.includes('invalid input syntax for type uuid')) {
+          throw new BadRequestException(`Invalid task ID format: ${taskId}`);
+        }
+      }
+
+      throw error;
     }
-
-    return foundTask;
   }
 
-  public create(task: CreateTaskDto): TaskDto {
-    const newTask: TaskDto = {
-      ...task,
-      id: uuidv4(),
-      status: task.status ?? TaskStatusEnum.TO_DO,
+  public async create(task: CreateTaskDto): Promise<TaskDto> {
+    const dbTask = this.tasksRepository.create({
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      expirationDate: task.expirationDate,
       createdAt: new Date(),
-    };
-    this.tasks.push(newTask);
-    return newTask;
+    });
+
+    const savedTask = await this.tasksRepository.save(dbTask);
+    return savedTask;
   }
 
-  public update(taskId: string, updateTaskDto: TaskDto): TaskDto {
-    const taskIndex = this.tasks.findIndex((task) => task.id === taskId);
-
-    if (taskIndex === -1) {
-      throw new NotFoundException(`Task with ID ${taskId} not found`);
-    }
-
-    const updatedTask = {
-      ...updateTaskDto,
-      id: this.tasks[taskIndex].id,
-    } satisfies TaskDto;
-
-    this.tasks[taskIndex] = updatedTask;
-    return updatedTask;
-  }
-
-  public partialUpdate(
+  public async update(
     taskId: string,
-    partialTaskDto: Partial<TaskDto>,
-  ): TaskDto {
-    const taskIndex = this.tasks.findIndex((task) => task.id === taskId);
+    updateTaskDto: UpdateTaskDto,
+  ): Promise<TaskDto> {
+    const task = await this.findOne(taskId);
 
-    if (taskIndex === -1) {
-      throw new NotFoundException(`Task with ID ${taskId} not found`);
-    }
+    const updatedTask = this.tasksRepository.merge(task, updateTaskDto);
 
-    const updatedTask = {
-      ...this.tasks[taskIndex],
-      ...partialTaskDto,
-      id: taskId,
-    };
-
-    this.tasks[taskIndex] = updatedTask;
-    return updatedTask;
+    return this.tasksRepository.save(updatedTask);
   }
 
-  public delete(taskId: string): TaskDto {
-    const taskIndex = this.tasks.findIndex((task) => task.id === taskId);
+  public async partialUpdate(
+    taskId: string,
+    partialTaskDto: PartialUpdateTaskDto,
+  ): Promise<TaskDto> {
+    const task = await this.findOne(taskId);
 
-    if (taskIndex === -1) {
-      throw new NotFoundException(`Task with ID ${taskId} not found`);
-    }
+    const updatedTask = this.tasksRepository.merge(task, partialTaskDto);
 
-    const [deletedTask] = this.tasks.splice(taskIndex, 1);
+    return this.tasksRepository.save(updatedTask);
+  }
 
-    return deletedTask;
+  public async delete(taskId: string): Promise<TaskDto> {
+    const taskToDelete = await this.findOne(taskId);
+
+    await this.tasksRepository.remove(taskToDelete);
+
+    return taskToDelete;
   }
 }
