@@ -11,7 +11,7 @@ export class TaskEntity {
   @Column({ type: 'varchar' })
   description: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', default: 'TO_DO' })
   status: string;
 
   @Column({ type: 'timestamptz', name: 'created_at' })
