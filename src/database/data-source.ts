@@ -8,6 +8,8 @@ config();
 
 const configService = new ConfigService();
 
+const isProduction: boolean = process.env.NODE_ENV === 'production';
+
 const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
   host: configService.get<string>('DB_HOST'),
@@ -16,7 +18,9 @@ const dataSourceOptions: DataSourceOptions = {
   port: +configService.getOrThrow<number>('DB_PORT'),
   password: configService.get<string>('DB_PASSWORD'),
   entities: [UserEntity, TaskEntity],
-  migrations: [__dirname + '/migrations/*.ts'],
+  migrations: isProduction
+    ? [__dirname + '/migrations/*.js']
+    : [__dirname + '/migrations/*.ts'],
   synchronize: false,
 };
 
