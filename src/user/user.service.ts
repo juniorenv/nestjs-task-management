@@ -1,5 +1,9 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { CreateUserDto, CreateUserResponseDto, UserDto } from './user.dto';
+import {
+  CreateUserDto,
+  CreateUserResponseDto,
+  UserWithHashedPassword,
+} from './user.dto';
 import { hash } from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/database/entities/user.entity';
@@ -21,7 +25,7 @@ export class UserService {
 
     const dbUser = this.usersRepository.create({
       username: user.username,
-      passwordHash: await hash(user.passwordHash, 10),
+      passwordHash: await hash(user.password, 10),
     });
 
     const { id, username } = await this.usersRepository.save(dbUser);
@@ -29,7 +33,9 @@ export class UserService {
     return { id, username };
   }
 
-  public async findByUsername(username: string): Promise<UserDto | null> {
+  public async findByUsername(
+    username: string,
+  ): Promise<UserWithHashedPassword | null> {
     const foundUser = await this.usersRepository.findOne({
       where: { username },
     });
