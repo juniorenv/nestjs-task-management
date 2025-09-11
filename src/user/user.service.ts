@@ -1,5 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { CreateUserDto, CreateUserResponse, UserDto } from './user.dto';
+import { CreateUserDto, CreateUserResponseDto, UserDto } from './user.dto';
 import { hash } from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/database/entities/user.entity';
@@ -12,7 +12,7 @@ export class UserService {
     private readonly usersRepository: Repository<UserEntity>,
   ) {}
 
-  public async create(user: CreateUserDto): Promise<CreateUserResponse> {
+  public async create(user: CreateUserDto): Promise<CreateUserResponseDto> {
     const userAlreadyRegistered = await this.findByUsername(user.username);
 
     if (userAlreadyRegistered) {
@@ -21,7 +21,7 @@ export class UserService {
 
     const dbUser = this.usersRepository.create({
       username: user.username,
-      passwordHash: await hash(user.password, 10),
+      passwordHash: await hash(user.passwordHash, 10),
     });
 
     const { id, username } = await this.usersRepository.save(dbUser);
@@ -41,7 +41,7 @@ export class UserService {
     return {
       id: foundUser.id,
       username: foundUser.username,
-      password: foundUser.passwordHash,
+      passwordHash: foundUser.passwordHash,
     };
   }
 }

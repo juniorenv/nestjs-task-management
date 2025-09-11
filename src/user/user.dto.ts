@@ -8,7 +8,7 @@ export class CreateUserDto {
 
   @IsString()
   @MinLength(6)
-  password: string;
+  passwordHash: string;
 }
 
 export class UserDto extends CreateUserDto {
@@ -16,7 +16,7 @@ export class UserDto extends CreateUserDto {
   id: string;
 }
 
-export interface CreateUserResponse {
+export interface CreateUserResponseDto {
   id: string;
   username: string;
 }

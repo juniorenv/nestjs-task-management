@@ -24,7 +24,7 @@ export class AuthService {
   ): Promise<AuthResponseDto> {
     const foundUser = await this.userService.findByUsername(username);
 
-    if (!foundUser || !compareSync(password, foundUser.password)) {
+    if (!foundUser || !compareSync(password, foundUser.passwordHash)) {
       throw new UnauthorizedException();
     }
 
