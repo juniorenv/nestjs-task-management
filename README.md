@@ -308,14 +308,17 @@ src/
 │   ├── auth.controller.ts
 │   ├── auth.service.ts
 │   ├── auth.guard.ts
+│   ├── auth.module.ts
 │   └── auth.dto.ts
 ├── user/                  # User management module
 │   ├── user.controller.ts
 │   ├── user.service.ts
+│   ├── user.module.ts
 │   └── user.dto.ts
 ├── task/                  # Task management module
 │   ├── task.controller.ts
 │   ├── task.service.ts
+│   ├── task.module.ts
 │   └── task.dto.ts
 ├── database/              # Database configuration
 │   ├── entities/          # TypeORM entities
