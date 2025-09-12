@@ -6,7 +6,7 @@ services:
       NODE_ENV: production
     env_file: '.env'
     ports:
-      - 3001:3000
+      - 3000:3000
     depends_on:
       db:
         condition: service_healthy
