@@ -5,6 +5,7 @@
 [POSTGRES__BADGE]: https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white
 [DOCKER__BADGE]: https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white
 [BCRYPT__BADGE]: https://img.shields.io/badge/bcrypt-4A4A55?style=for-the-badge&logo=npm
+[SWAGGER__BADGE]: https://img.shields.io/badge/swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black
 
 # NestJS Task Management API
 
@@ -15,8 +16,9 @@
 ![PostgreSQL][POSTGRES__BADGE]
 ![Docker][DOCKER__BADGE]
 ![Bcrypt][BCRYPT__BADGE]
+![Swagger][SWAGGER__BADGE]
 
-A robust task management REST API built with NestJS, TypeORM, and PostgreSQL. Features JWT authentication, comprehensive CRUD operations, and Docker containerization.
+A robust task management REST API built with NestJS, TypeORM, and PostgreSQL. Features JWT authentication, comprehensive CRUD operations, interactive Swagger documentation, and Docker containerization.
 
 ## Features
 
