@@ -5,9 +5,9 @@ import {
   ApiBadRequestResponse,
   ApiConflictResponse,
   ApiCreatedResponse,
-  ApiInternalServerErrorResponse,
   ApiOperation,
 } from '@nestjs/swagger';
+import { ApiCommonResponses } from 'src/common/decorators/api-common-responses.decorator';
 
 @Controller('users')
 export class UserController {
@@ -57,16 +57,7 @@ export class UserController {
       },
     },
   })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error - database or system error',
-    schema: {
-      type: 'object',
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: { type: 'string', example: 'Internal server error' },
-      },
-    },
-  })
+  @ApiCommonResponses()
   public async create(
     @Body() user: CreateUserDto,
   ): Promise<CreateUserResponseDto> {

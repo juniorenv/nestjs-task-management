@@ -3,11 +3,13 @@ import { AuthService } from './auth.service';
 import { AuthResponseDto, LoginDto } from './auth.dto';
 import {
   ApiBadRequestResponse,
-  ApiInternalServerErrorResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import {
+  ApiAuthResponses,
+  ApiCommonResponses,
+} from 'src/common/decorators/api-common-responses.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -44,26 +46,8 @@ export class AuthController {
       },
     },
   })
-  @ApiUnauthorizedResponse({
-    description: 'Authentication failed - invalid credentials',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'Unauthorized' },
-        statusCode: { type: 'number', example: 401 },
-      },
-    },
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Internal server error - database or system error',
-    schema: {
-      type: 'object',
-      properties: {
-        statusCode: { type: 'number', example: 500 },
-        message: { type: 'string', example: 'Internal server error' },
-      },
-    },
-  })
+  @ApiAuthResponses()
+  @ApiCommonResponses()
   public async signIn(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
     return await this.authService.signIn(loginDto.username, loginDto.password);
   }
