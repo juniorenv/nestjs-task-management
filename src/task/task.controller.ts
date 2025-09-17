@@ -15,7 +15,6 @@ import {
   FindAllParams,
   PartialUpdateTaskDto,
   TaskDto,
-  TaskRouteParameters,
   UpdateTaskDto,
 } from './task.dto';
 import { TaskService } from './task.service';
@@ -43,18 +42,18 @@ export class TaskController {
 
   @Put('/:taskId')
   public async update(
-    @Param() params: TaskRouteParameters,
+    @Param('taskId') taskId: string,
     @Body() task: UpdateTaskDto,
   ): Promise<TaskDto> {
-    return await this.taskService.update(params.taskId, task);
+    return await this.taskService.update(taskId, task);
   }
 
   @Patch('/:taskId')
   public async partialUpdate(
-    @Param() params: TaskRouteParameters,
+    @Param('taskId') taskId: string,
     @Body() task: PartialUpdateTaskDto,
   ): Promise<TaskDto> {
-    return await this.taskService.partialUpdate(params.taskId, task);
+    return await this.taskService.partialUpdate(taskId, task);
   }
 
   @Delete('/:taskId')

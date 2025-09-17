@@ -66,8 +66,3 @@ export interface FindAllParams {
   title?: string;
   status?: string;
 }
-
-export class TaskRouteParameters {
-  @IsUUID()
-  taskId: string;
-}
