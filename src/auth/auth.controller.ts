@@ -7,8 +7,8 @@ import {
   ApiOperation,
 } from '@nestjs/swagger';
 import {
-  ApiAuthResponses,
-  ApiCommonResponses,
+  ApiUnauthorized,
+  ApiInternalServerError,
 } from 'src/common/decorators/api-common-responses.decorator';
 
 @Controller('auth')
@@ -46,8 +46,8 @@ export class AuthController {
       },
     },
   })
-  @ApiAuthResponses()
-  @ApiCommonResponses()
+  @ApiUnauthorized()
+  @ApiInternalServerError()
   public async signIn(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
     return await this.authService.signIn(loginDto.username, loginDto.password);
   }

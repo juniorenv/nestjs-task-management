@@ -7,7 +7,7 @@ import {
   ApiCreatedResponse,
   ApiOperation,
 } from '@nestjs/swagger';
-import { ApiCommonResponses } from 'src/common/decorators/api-common-responses.decorator';
+import { ApiInternalServerError } from 'src/common/decorators/api-common-responses.decorator';
 
 @Controller('users')
 export class UserController {
@@ -57,7 +57,7 @@ export class UserController {
       },
     },
   })
-  @ApiCommonResponses()
+  @ApiInternalServerError()
   public async create(
     @Body() user: CreateUserDto,
   ): Promise<CreateUserResponseDto> {
