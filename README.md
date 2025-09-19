@@ -26,10 +26,12 @@ A robust task management REST API built with NestJS, TypeORM, and PostgreSQL. Fe
 - User registration and login
 - Complete task management (Create, Read, Update, Delete)
 - Task filtering by title and status
+- **Interactive Swagger API documentation at `/docs`**
 - PostgreSQL database with migrations
 - Docker support with multi-stage builds
 - Input validation and error handling
 - RESTful API design
+- Comprehensive API testing interface
 
 ## Technology Stack
 
@@ -38,6 +40,7 @@ A robust task management REST API built with NestJS, TypeORM, and PostgreSQL. Fe
 - **ORM**: TypeORM (v0.3.26)
 - **Authentication**: JWT with bcrypt password hashing
 - **Validation**: class-validator & class-transformer
+- **API Documentation**: Swagger/OpenAPI 3.0
 - **Containerization**: Docker & Docker Compose
 - **Language**: TypeScript
 
@@ -117,6 +120,44 @@ npm run start:prod
 ```
 
 The API will be available at `http://localhost:3000`
+
+**🚀 Interactive API documentation is available at `http://localhost:3000/docs`**
+
+## Interactive API Documentation (Swagger)
+
+This API includes comprehensive interactive Swagger documentation that allows you to:
+
+- **Explore all available endpoints** with detailed descriptions
+- **Test API calls directly** from the browser interface
+- **View complete request/response schemas** with examples
+- **Authenticate with JWT tokens** for protected endpoints
+- **See validation rules** and error responses
+- **Export API specification** in OpenAPI format
+
+### Accessing Swagger UI
+
+Once the application is running, visit:
+
+```
+http://localhost:3000/docs
+```
+
+### Using Swagger with Authentication
+
+1. **Create Account**: Use the `POST /users` endpoint to register
+2. **Login**: Use the `POST /auth/login` endpoint to get your JWT token
+3. **Authorize**: Click the "🔒 Authorize" button in Swagger UI
+4. **Enter Token**: Input your token
+5. **Test Endpoints**: Now you can test all protected endpoints seamlessly
+
+### Swagger Features Available
+
+- **Persistent Authorization**: Your JWT token persists across browser sessions
+- **Request Duration Display**: See how long each API call takes
+- **Interactive Forms**: Easy-to-use forms for testing endpoints
+- **Response Examples**: See actual API responses with proper formatting
+- **Error Documentation**: Comprehensive error response examples
+- **Schema Validation**: Real-time validation of request payloads
 
 ## API Documentation
 
@@ -291,9 +332,6 @@ npm run migration:revert   # Revert last migration
 # Code Quality
 npm run lint               # Lint and fix code
 npm run format             # Format code with Prettier
-npm run test               # Run unit tests
-npm run test:e2e           # Run e2e tests
-npm run test:cov           # Run tests with coverage
 ```
 
 ### Creating Database Migrations
@@ -327,6 +365,8 @@ src/
 │   ├── migrations/        # Database migrations
 │   ├── database.module.ts
 │   └── data-source.ts
+├── common/                # Shared utilities
+│   └── decorators/        # Custom decorators
 ├── app.module.ts          # Root application module
 └── main.ts               # Application entry point
 ```
@@ -368,6 +408,34 @@ The API implements comprehensive error handling:
 ## Security Features
 
 - Password hashing using bcrypt (salt rounds: 10)
-- JWT token-based authentication
+- JWT token-based authentication with configurable expiration
 - Request validation using class-validator
 - Environment variable protection for sensitive data
+- CORS protection (configurable)
+- Input sanitization and validation
+
+## API Testing
+
+### Using Swagger UI (Recommended)
+
+1. Navigate to `http://localhost:3000/docs`
+2. Use the interactive interface to test all endpoints
+3. Authenticate once and test multiple endpoints seamlessly
+
+### Using cURL
+
+```bash
+# Register a new user
+curl -X POST http://localhost:3000/users \
+  -H "Content-Type: application/json" \
+  -d '{"username": "testuser", "password": "password123"}'
+
+# Login and get token
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "testuser", "password": "password123"}'
+
+# Use token for authenticated requests
+curl -X GET http://localhost:3000/tasks \
+  -H "Authorization: Bearer <your-jwt-token>"
+```
