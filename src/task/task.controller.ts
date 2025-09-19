@@ -19,7 +19,11 @@ import {
 } from './task.dto';
 import { TaskService } from './task.service';
 import { AuthGuard } from 'src/auth/auth.guard';
+import {
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('Tasks')
 @Controller('tasks')
 @UseGuards(AuthGuard)
 export class TaskController {

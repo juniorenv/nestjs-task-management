@@ -6,9 +6,11 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiOperation,
+  ApiTags,
 } from '@nestjs/swagger';
 import { ApiInternalServerError } from 'src/common/decorators/api-common-responses.decorator';
 
+@ApiTags('Users')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
