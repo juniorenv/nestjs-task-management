@@ -15,36 +15,199 @@ import {
   FindAllParams,
   PartialUpdateTaskDto,
   TaskDto,
+  TaskStatusEnum,
   UpdateTaskDto,
 } from './task.dto';
 import { TaskService } from './task.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import {
+  ApiUnauthorized,
+  ApiBadRequest,
+  ApiInternalServerError,
+  ApiNotFound,
+} from 'src/common/decorators/api-common-responses.decorator';
 
 @ApiTags('Tasks')
 @Controller('tasks')
 @UseGuards(AuthGuard)
+@ApiBearerAuth('JWT-auth')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Get()
+  @ApiOperation({
+    summary: 'Get all tasks',
+    description:
+      'Retrieve a list of tasks with optional filtering by title and status',
+  })
+  @ApiQuery({
+    name: 'title',
+    required: false,
+    type: String,
+    description: 'Filter tasks by title (partial match, case-sensitive)',
+    schema: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 256,
+    },
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: TaskStatusEnum,
+    description: 'Filter tasks by exact status match',
+    schema: {
+      type: 'string',
+      enum: Object.values(TaskStatusEnum),
+    },
+  })
+  @ApiOkResponse({
+    description: 'Tasks retrieved successfully',
+    type: [TaskDto],
+  })
+  @ApiUnauthorized()
+  @ApiInternalServerError()
   public async findAll(@Query() params: FindAllParams): Promise<TaskDto[]> {
     return await this.taskService.findAll(params);
   }
 
   @Get('/:taskId')
+  @ApiOperation({
+    summary: 'Get Task by ID',
+    description: 'Retrieve a specific task by its unique identifier.',
+  })
+  @ApiParam({
+    name: 'taskId',
+    type: String,
+    format: 'uuid',
+    description: 'Unique identifier of the task (UUID format)',
+  })
+  @ApiOkResponse({
+    description: 'Task retrieved successfully',
+    type: TaskDto,
+  })
+  @ApiBadRequest()
+  @ApiNotFound()
+  @ApiInternalServerError()
+  @ApiUnauthorized()
   public async findOne(@Param('taskId') taskId: string): Promise<TaskDto> {
     return await this.taskService.findOne(taskId);
   }
 
   @Post()
+  @ApiOperation({
+    summary: 'Create New Task',
+    description:
+      'Create a new task with title, description, status, and expiration date.',
+  })
+  @ApiCreatedResponse({
+    description: 'Task created successfully',
+    type: TaskDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid input data - validation errors',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'array',
+          items: { type: 'string' },
+          example: [
+            'title must be shorter than or equal to 256 characters',
+            'title must be longer than or equal to 4 characters',
+            'title must be a string',
+            'description must be shorter than or equal to 512 characters',
+            'description must be longer than or equal to 6 characters',
+            'description must be a string',
+            'expirationDate must be a valid ISO 8601 date string',
+          ],
+        },
+        error: { type: 'string', example: 'Bad Request' },
+        statusCode: { type: 'number', example: 400 },
+      },
+    },
+  })
+  @ApiUnauthorized()
+  @ApiInternalServerError()
   public async create(@Body() task: CreateTaskDto): Promise<TaskDto> {
     return await this.taskService.create(task);
   }
 
   @Put('/:taskId')
+  @ApiOperation({
+    summary: 'Update a task completely',
+    description: 'Update all fields of an existing task',
+  })
+  @ApiParam({
+    name: 'taskId',
+    type: String,
+    format: 'uuid',
+    description: 'Unique identifier of the task to update',
+  })
+  @ApiOkResponse({
+    description: 'Task updated successfully',
+    type: TaskDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad Request - Invalid input data',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            statusCode: { type: 'number', example: 400 },
+            error: { type: 'string', example: 'Bad Request' },
+            message: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+          },
+        },
+        examples: {
+          bodyValidationErrors: {
+            summary: 'Request Body Validation Errors',
+            description: 'When request body fields fail validation rules',
+            value: {
+              message: [
+                'title must be shorter than or equal to 256 characters',
+                'title must be longer than or equal to 4 characters',
+                'title must be a string',
+                'description must be shorter than or equal to 512 characters',
+                'description must be longer than or equal to 6 characters',
+                'description must be a string',
+                'status must be one of the following values: TO_DO, IN_PROGRESS, DONE',
+                'expirationDate must be a valid ISO 8601 date string',
+              ],
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+          invalidTaskId: {
+            summary: 'Invalid Task ID Parameter',
+            description: 'When the taskId parameter is not a valid UUID format',
+            value: {
+              message: 'Invalid task ID format: invalid-id',
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiNotFound()
+  @ApiInternalServerError()
+  @ApiUnauthorized()
   public async update(
     @Param('taskId') taskId: string,
     @Body() task: UpdateTaskDto,
@@ -53,6 +216,24 @@ export class TaskController {
   }
 
   @Patch('/:taskId')
+  @ApiOperation({
+    summary: 'Update a task partially',
+    description: 'Update specific fields of an existing task',
+  })
+  @ApiParam({
+    name: 'taskId',
+    type: String,
+    format: 'uuid',
+    description: 'Unique identifier of the task to update',
+  })
+  @ApiOkResponse({
+    description: 'Task updated successfully',
+    type: TaskDto,
+  })
+  @ApiBadRequest()
+  @ApiNotFound()
+  @ApiInternalServerError()
+  @ApiUnauthorized()
   public async partialUpdate(
     @Param('taskId') taskId: string,
     @Body() task: PartialUpdateTaskDto,
@@ -60,6 +241,24 @@ export class TaskController {
     return await this.taskService.partialUpdate(taskId, task);
   }
 
+  @ApiOperation({
+    summary: 'Delete a task',
+    description: 'Remove a task from the system',
+  })
+  @ApiParam({
+    name: 'taskId',
+    type: String,
+    format: 'uuid',
+    description: 'Unique identifier of the task to delete',
+  })
+  @ApiOkResponse({
+    description: 'Task deleted successfully - returns deleted task data',
+    type: TaskDto,
+  })
+  @ApiBadRequest()
+  @ApiNotFound()
+  @ApiInternalServerError()
+  @ApiUnauthorized()
   @Delete('/:taskId')
   public async delete(@Param('taskId') taskId: string): Promise<TaskDto> {
     return this.taskService.delete(taskId);
