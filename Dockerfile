@@ -17,6 +17,6 @@ COPY --from=builder --chown=node:node /app/dist ./dist
 
 USER node
 
-EXPOSE 3000
+EXPOSE 3000 # Static documentation
 
 CMD ["sh", "-c", "npx typeorm migration:run -d dist/database/data-source.js && node dist/main"]

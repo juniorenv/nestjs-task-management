@@ -76,6 +76,9 @@ Configure the following environment variables in `.env`:
 JWT_SECRET=your-super-secret-jwt-key
 JWT_EXPIRATION_TIME=3600
 
+# Port Configuration
+PORT=3000
+
 # Database Configuration
 DB_HOST=localhost
 DB_PORT=5432
