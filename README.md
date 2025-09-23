@@ -53,23 +53,32 @@ A robust task management REST API built with NestJS, TypeORM, and PostgreSQL. Fe
 
 ## Installation & Setup
 
-### 1. Clone and Install Dependencies
+Choose your preferred setup method:
+
+### Option A: Docker Setup (Recommended for Quick Start)
+
+Perfect for trying out the API quickly or if you don't want to install PostgreSQL locally.
+
+#### 1. Clone and Setup
 
 ```bash
 git clone https://github.com/srlightt/nestjs-task-management.git
 cd nestjs-task-management
-npm install
 ```
 
-### 2. Environment Configuration
+#### 2. Custom Configuration
 
-Copy the example environment file and configure your settings:
+If you want to customize settings:
 
 ```bash
+# Copy environment template
 cp .env.example .env
+
+# Edit .env with your preferred settings
+vim .env  # or use your preferred editor
 ```
 
-Configure the following environment variables in `.env`:
+Example `.env`:
 
 ```env
 # JWT Configuration
@@ -80,51 +89,116 @@ JWT_EXPIRATION_TIME=3600
 PORT=3000
 
 # Database Configuration
-DB_HOST=localhost
+DB_HOST=db
 DB_PORT=5432
-DB_NAME=db
+DB_NAME=taskmanagement
 DB_USERNAME=postgres
-DB_PASSWORD=your-db-password
+DB_PASSWORD=your-secure-password
 ```
 
-### 3. Database Setup
-
-#### Using Docker Compose (Recommended)
-
-Start the entire application with database:
+#### 3. Start with Custom Config
 
 ```bash
 docker compose up -d
+
+# The API will be available at http://localhost:3000
+# Swagger documentation at http://localhost:3000/docs
 ```
 
-#### Manual PostgreSQL Setup
-
-1. Install and start PostgreSQL
-2. Create database: `db`
-3. Run migrations:
+#### 4. Verify Installation
 
 ```bash
+# Check if services are running
+docker compose ps
+
+# View logs
+docker compose logs -f app
+
+# Stop services
+docker compose down
+```
+
+### Option B: Local Development Setup
+
+Best for active development, debugging, and when you want full control over the environment.
+
+#### 1. Prerequisites
+
+- Node.js (v22 or higher)
+- npm or yarn
+- PostgreSQL (v17 or higher)
+
+#### 2. Clone and Install
+
+```bash
+git clone https://github.com/srlightt/nestjs-task-management.git
+cd nestjs-task-management
+npm install
+```
+
+#### 3. Database Setup
+
+**Prerequisites:**
+
+- Install PostgreSQL (v17 or higher) on your system
+- Ensure PostgreSQL service is running
+- Create a database named `taskmanagement`
+
+#### 4. Environment Configuration
+
+```bash
+# Copy environment template
+cp .env.example .env
+```
+
+Configure `.env` for local development:
+
+```env
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key
+JWT_EXPIRATION_TIME=3600
+
+# Port Configuration
+PORT=3000
+
+# Database Configuration (Local PostgreSQL)
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=taskmanagement
+DB_USERNAME=postgres
+DB_PASSWORD=your-database-password
+```
+
+#### 5. Run Database Migrations
+
+```bash
+# Build the application first
+npm run build
+
+# Run migrations
 npm run migration:run
 ```
 
-### 4. Running the Application
-
-#### Development Mode
+#### 6. Start the Application
 
 ```bash
+# Development mode (with hot reload)
 npm run start:dev
-```
 
-#### Production Mode
+# Debug mode
+npm run start:debug
 
-```bash
+# Production mode
 npm run build
 npm run start:prod
 ```
 
-The API will be available at `http://localhost:3000`
+#### 7. Verify Installation
 
-**🚀 Interactive API documentation is available at `http://localhost:3000/docs`**
+The API will be available at:
+
+- **Main API**: `http://localhost:3000`
+- **Interactive API documentation is available at `http://localhost:3000/docs`**
 
 ## Interactive API Documentation (Swagger)
 
