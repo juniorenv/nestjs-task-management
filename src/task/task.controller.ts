@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Request,
   Param,
   Patch,
   Post,
@@ -36,6 +37,8 @@ import {
   ApiInternalServerError,
   ApiNotFound,
 } from 'src/common/decorators/api-common-responses.decorator';
+import { AuthenticatedRequest } from 'src/common/interfaces/authenticated-request.interface';
+import { TaskEntity } from 'src/database/entities/task.entity';
 
 @ApiTags('Tasks')
 @Controller('tasks')
@@ -77,8 +80,13 @@ export class TaskController {
   })
   @ApiUnauthorized()
   @ApiInternalServerError()
-  public async findAll(@Query() params: FindAllParams): Promise<TaskDto[]> {
-    return await this.taskService.findAll(params);
+  public async findAll(
+    @Request() req: AuthenticatedRequest,
+    @Query() params: FindAllParams,
+  ): Promise<TaskEntity[]> {
+    const userId = req.user.sub;
+
+    return await this.taskService.findAll(userId, params);
   }
 
   @Get('/:taskId')
@@ -100,8 +108,13 @@ export class TaskController {
   @ApiNotFound()
   @ApiInternalServerError()
   @ApiUnauthorized()
-  public async findOne(@Param('taskId') taskId: string): Promise<TaskDto> {
-    return await this.taskService.findOne(taskId);
+  public async findOne(
+    @Request() req: AuthenticatedRequest,
+    @Param('taskId') taskId: string,
+  ): Promise<TaskEntity> {
+    const userId = req.user.sub;
+
+    return await this.taskService.findOne(userId, taskId);
   }
 
   @Post()
@@ -139,8 +152,13 @@ export class TaskController {
   })
   @ApiUnauthorized()
   @ApiInternalServerError()
-  public async create(@Body() task: CreateTaskDto): Promise<TaskDto> {
-    return await this.taskService.create(task);
+  public async create(
+    @Request() req: AuthenticatedRequest,
+    @Body() task: CreateTaskDto,
+  ): Promise<TaskEntity> {
+    const userId = req.user.sub;
+
+    return await this.taskService.create(userId, task);
   }
 
   @Put('/:taskId')
@@ -209,10 +227,13 @@ export class TaskController {
   @ApiInternalServerError()
   @ApiUnauthorized()
   public async update(
+    @Request() req: AuthenticatedRequest,
     @Param('taskId') taskId: string,
     @Body() task: UpdateTaskDto,
-  ): Promise<TaskDto> {
-    return await this.taskService.update(taskId, task);
+  ): Promise<TaskEntity> {
+    const userId = req.user.sub;
+
+    return await this.taskService.update(userId, taskId, task);
   }
 
   @Patch('/:taskId')
@@ -235,10 +256,13 @@ export class TaskController {
   @ApiInternalServerError()
   @ApiUnauthorized()
   public async partialUpdate(
+    @Request() req: AuthenticatedRequest,
     @Param('taskId') taskId: string,
     @Body() task: PartialUpdateTaskDto,
-  ): Promise<TaskDto> {
-    return await this.taskService.partialUpdate(taskId, task);
+  ): Promise<TaskEntity> {
+    const userId = req.user.sub;
+
+    return await this.taskService.partialUpdate(userId, taskId, task);
   }
 
   @ApiOperation({
@@ -260,7 +284,12 @@ export class TaskController {
   @ApiInternalServerError()
   @ApiUnauthorized()
   @Delete('/:taskId')
-  public async delete(@Param('taskId') taskId: string): Promise<TaskDto> {
-    return this.taskService.delete(taskId);
+  public async delete(
+    @Request() req: AuthenticatedRequest,
+    @Param('taskId') taskId: string,
+  ): Promise<TaskEntity> {
+    const userId = req.user.sub;
+
+    return this.taskService.delete(userId, taskId);
   }
 }
