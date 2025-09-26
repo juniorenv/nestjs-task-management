@@ -27,8 +27,13 @@ export class TaskService {
     private readonly tasksRepository: Repository<TaskEntity>,
   ) {}
 
-  public async findAll(params: FindAllParams): Promise<TaskDto[]> {
-    const searchParams: FindOptionsWhere<TaskDto> = {};
+  public async findAll(
+    userId: string,
+    params: FindAllParams,
+  ): Promise<TaskEntity[]> {
+    const searchParams: FindOptionsWhere<TaskDto> = {
+      userId,
+    };
 
     if (params.title) {
       searchParams.title = Like(`%${params.title}%`);
@@ -45,11 +50,12 @@ export class TaskService {
     return tasksFound;
   }
 
-  public async findOne(taskId: string): Promise<TaskDto> {
+  public async findOne(userId: string, taskId: string): Promise<TaskEntity> {
     try {
       const foundTask = await this.tasksRepository.findOneOrFail({
         where: {
           id: taskId,
+          userId,
         },
       });
 
@@ -69,13 +75,17 @@ export class TaskService {
     }
   }
 
-  public async create(task: CreateTaskDto): Promise<TaskDto> {
+  public async create(
+    userId: string,
+    task: CreateTaskDto,
+  ): Promise<TaskEntity> {
     const dbTask = this.tasksRepository.create({
       title: task.title,
       description: task.description,
       status: task.status,
       expirationDate: task.expirationDate,
       createdAt: new Date(),
+      userId,
     });
 
     const savedTask = await this.tasksRepository.save(dbTask);
@@ -83,10 +93,11 @@ export class TaskService {
   }
 
   public async update(
+    userId: string,
     taskId: string,
     updateTaskDto: UpdateTaskDto,
-  ): Promise<TaskDto> {
-    const task = await this.findOne(taskId);
+  ): Promise<TaskEntity> {
+    const task = await this.findOne(userId, taskId);
 
     const updatedTask = this.tasksRepository.merge(task, updateTaskDto);
 
@@ -94,18 +105,19 @@ export class TaskService {
   }
 
   public async partialUpdate(
+    userId: string,
     taskId: string,
     partialTaskDto: PartialUpdateTaskDto,
-  ): Promise<TaskDto> {
-    const task = await this.findOne(taskId);
+  ): Promise<TaskEntity> {
+    const task = await this.findOne(userId, taskId);
 
     const updatedTask = this.tasksRepository.merge(task, partialTaskDto);
 
     return this.tasksRepository.save(updatedTask);
   }
 
-  public async delete(taskId: string): Promise<TaskDto> {
-    const taskToDelete = await this.findOne(taskId);
+  public async delete(userId: string, taskId: string): Promise<TaskEntity> {
+    const taskToDelete = await this.findOne(userId, taskId);
 
     await this.tasksRepository.remove(taskToDelete);
 
