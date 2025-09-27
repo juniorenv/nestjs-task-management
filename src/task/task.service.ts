@@ -40,7 +40,7 @@ export class TaskService {
     }
 
     if (params.status) {
-      searchParams.status = Like(`%${params.status}%`);
+      searchParams.status = params.status;
     }
 
     const tasksFound = await this.tasksRepository.find({
@@ -88,8 +88,17 @@ export class TaskService {
       userId,
     });
 
-    const savedTask = await this.tasksRepository.save(dbTask);
-    return savedTask;
+    try {
+      const savedTask = await this.tasksRepository.save(dbTask);
+      return savedTask;
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        if (error.message.includes('violates foreign key constraint')) {
+          throw new BadRequestException('Invalid user ID');
+        }
+      }
+      throw error;
+    }
   }
 
   public async update(
