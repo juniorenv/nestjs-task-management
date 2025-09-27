@@ -129,24 +129,48 @@ export class TaskController {
   })
   @ApiBadRequestResponse({
     description: 'Invalid input data - validation errors',
-    schema: {
-      type: 'object',
-      properties: {
-        message: {
-          type: 'array',
-          items: { type: 'string' },
-          example: [
-            'title must be shorter than or equal to 256 characters',
-            'title must be longer than or equal to 4 characters',
-            'title must be a string',
-            'description must be shorter than or equal to 512 characters',
-            'description must be longer than or equal to 6 characters',
-            'description must be a string',
-            'expirationDate must be a valid ISO 8601 date string',
-          ],
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            statusCode: { type: 'number', example: 400 },
+            error: { type: 'string', example: 'Bad Request' },
+            message: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+          },
         },
-        error: { type: 'string', example: 'Bad Request' },
-        statusCode: { type: 'number', example: 400 },
+        examples: {
+          bodyValidationErrors: {
+            summary: 'Request Body Validation Errors',
+            description: 'When request body fields fail validation rules',
+            value: {
+              message: [
+                'title must be shorter than or equal to 256 characters',
+                'title must be longer than or equal to 4 characters',
+                'title must be a string',
+                'description must be shorter than or equal to 512 characters',
+                'description must be longer than or equal to 6 characters',
+                'description must be a string',
+                'expirationDate must be a valid ISO 8601 date string',
+              ],
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+          invalidTaskId: {
+            summary: 'Invalid User ID Error',
+            description:
+              'When the user ID from JWT token violates foreign key constraint',
+            value: {
+              message: 'Invalid user ID',
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+        },
       },
     },
   })
@@ -177,7 +201,7 @@ export class TaskController {
     type: TaskDto,
   })
   @ApiBadRequestResponse({
-    description: 'Bad Request - Invalid input data',
+    description: 'Invalid input data - validation errors',
     content: {
       'application/json': {
         schema: {
