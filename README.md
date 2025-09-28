@@ -62,7 +62,7 @@ Perfect for trying out the API quickly or if you don't want to install PostgreSQ
 #### 1. Clone and Setup
 
 ```bash
-git clone https://github.com/srlightt/nestjs-task-management.git
+git clone https://github.com/juniorenv/nestjs-task-management.git
 cd nestjs-task-management
 ```
 
@@ -131,7 +131,7 @@ Best for active development, debugging, and when you want full control over the 
 #### 2. Clone and Install
 
 ```bash
-git clone https://github.com/srlightt/nestjs-task-management.git
+git clone https://github.com/juniorenv/nestjs-task-management.git
 cd nestjs-task-management
 npm install
 ```
