@@ -38,7 +38,6 @@ import {
   ApiNotFound,
 } from 'src/common/decorators/api-common-responses.decorator';
 import { AuthenticatedRequest } from 'src/common/interfaces/authenticated-request.interface';
-import { TaskEntity } from 'src/database/entities/task.entity';
 
 @ApiTags('Tasks')
 @Controller('tasks')
@@ -83,7 +82,7 @@ export class TaskController {
   public async findAll(
     @Request() req: AuthenticatedRequest,
     @Query() params: FindAllParams,
-  ): Promise<TaskEntity[]> {
+  ): Promise<TaskDto[]> {
     const userId = req.user.sub;
 
     return await this.taskService.findAll(userId, params);
@@ -111,7 +110,7 @@ export class TaskController {
   public async findOne(
     @Request() req: AuthenticatedRequest,
     @Param('taskId') taskId: string,
-  ): Promise<TaskEntity> {
+  ): Promise<TaskDto> {
     const userId = req.user.sub;
 
     return await this.taskService.findOne(userId, taskId);
@@ -179,7 +178,7 @@ export class TaskController {
   public async create(
     @Request() req: AuthenticatedRequest,
     @Body() task: CreateTaskDto,
-  ): Promise<TaskEntity> {
+  ): Promise<TaskDto> {
     const userId = req.user.sub;
 
     return await this.taskService.create(userId, task);
@@ -254,7 +253,7 @@ export class TaskController {
     @Request() req: AuthenticatedRequest,
     @Param('taskId') taskId: string,
     @Body() task: UpdateTaskDto,
-  ): Promise<TaskEntity> {
+  ): Promise<TaskDto> {
     const userId = req.user.sub;
 
     return await this.taskService.update(userId, taskId, task);
@@ -283,7 +282,7 @@ export class TaskController {
     @Request() req: AuthenticatedRequest,
     @Param('taskId') taskId: string,
     @Body() task: PartialUpdateTaskDto,
-  ): Promise<TaskEntity> {
+  ): Promise<TaskDto> {
     const userId = req.user.sub;
 
     return await this.taskService.partialUpdate(userId, taskId, task);
@@ -311,7 +310,7 @@ export class TaskController {
   public async delete(
     @Request() req: AuthenticatedRequest,
     @Param('taskId') taskId: string,
-  ): Promise<TaskEntity> {
+  ): Promise<TaskDto> {
     const userId = req.user.sub;
 
     return this.taskService.delete(userId, taskId);
