@@ -18,14 +18,17 @@
 ![Bcrypt][BCRYPT__BADGE]
 ![Swagger][SWAGGER__BADGE]
 
-A robust task management REST API built with NestJS, TypeORM, and PostgreSQL. Features JWT authentication, comprehensive CRUD operations, interactive Swagger documentation, and Docker containerization.
+A robust task management REST API built with NestJS, TypeORM, and PostgreSQL. Features JWT authentication, user-specific task isolation, comprehensive CRUD operations, interactive Swagger documentation, and Docker containerization.
 
 ## Features
 
 - JWT-based authentication system
 - User registration and login
+- **User-specific task management** - Each user can only access and manage their own tasks
 - Complete task management (Create, Read, Update, Delete)
 - Task filtering by title and status
+- **Database relationship management** - Foreign key constraints and cascading deletes
+- **Performance optimization** - Indexed queries for faster searches
 - **Interactive Swagger API documentation at `/docs`**
 - PostgreSQL database with migrations
 - Docker support with multi-stage builds
@@ -290,6 +293,8 @@ All task endpoints require authentication. Include the JWT token in the Authoriz
 Authorization: Bearer <your-jwt-token>
 ```
 
+**Important**: Each user can only access and manage their own tasks. The API automatically filters tasks based on the authenticated user.
+
 #### Get All Tasks
 
 ```http
@@ -300,13 +305,17 @@ GET /tasks?title=example&status=TO_DO
 **Query Parameters:**
 
 - `title` (optional): Filter tasks by title (partial match)
-- `status` (optional): Filter tasks by status
+- `status` (optional): Filter tasks by exact status match
+
+**Note**: Only returns tasks belonging to the authenticated user.
 
 #### Get Single Task
 
 ```http
 GET /tasks/{taskId}
 ```
+
+**Note**: Returns 404 if the task doesn't exist or belongs to another user.
 
 #### Create Task
 
@@ -322,6 +331,22 @@ Content-Type: application/json
 }
 ```
 
+**Response:**
+
+```json
+{
+  "id": "uuid",
+  "userId": "user-uuid",
+  "title": "Complete project documentation",
+  "description": "Write comprehensive README and API documentation",
+  "status": "TO_DO",
+  "expirationDate": "2024-12-31T23:59:59.000Z",
+  "createdAt": "2024-01-15T10:30:00.000Z"
+}
+```
+
+**Note**: The `userId` field is automatically populated from the JWT token and cannot be specified by the client.
+
 #### Update Task (Full Update)
 
 ```http
@@ -336,6 +361,8 @@ Content-Type: application/json
 }
 ```
 
+**Note**: Only updates tasks owned by the authenticated user.
+
 #### Update Task (Partial Update)
 
 ```http
@@ -347,11 +374,15 @@ Content-Type: application/json
 }
 ```
 
+**Note**: Only updates tasks owned by the authenticated user.
+
 #### Delete Task
 
 ```http
 DELETE /tasks/{taskId}
 ```
+
+**Note**: Only deletes tasks owned by the authenticated user.
 
 ### Task Status Values
 
@@ -384,9 +415,29 @@ All successful responses return JSON with the requested data. Error responses fo
 - `id` (UUID, Primary Key)
 - `title` (VARCHAR, 1-256 chars)
 - `description` (VARCHAR, 1-512 chars)
-- `status` (VARCHAR, Default: 'TO_DO')
+- `status` (VARCHAR, Default: 'TO_DO', CHECK constraint)
 - `created_at` (TIMESTAMPTZ)
 - `expiration_date` (TIMESTAMPTZ)
+- `user_id` (UUID, Foreign Key → users.id, ON DELETE CASCADE)
+
+### Database Relationships
+
+- **One-to-Many**: User → Tasks (one user can have many tasks)
+- **Cascade Delete**: When a user is deleted, all their tasks are automatically deleted
+- **Foreign Key Constraint**: Ensures referential integrity between tasks and users
+
+### Database Indexes
+
+For optimal query performance:
+
+- **idx_tasks_user_status**: Composite index on `(user_id, status)` for filtered task queries
+- **idx_tasks_user_id_title_trgm**: GIN index on `(user_id, title)` for fast title searches using trigram matching
+
+### PostgreSQL Extensions
+
+- **uuid-ossp**: For UUID generation
+- **pg_trgm**: For trigram-based text similarity searches
+- **btree_gin**: For efficient composite GIN indexes
 
 ## Development
 
@@ -439,11 +490,19 @@ src/
 │   └── task.dto.ts
 ├── database/              # Database configuration
 │   ├── entities/          # TypeORM entities
+│   │   ├── user.entity.ts # User entity with tasks relation
+│   │   └── task.entity.ts # Task entity with user relation
 │   ├── migrations/        # Database migrations
+│   │   ├── 1756494841652-user-table.ts
+│   │   ├── 1756494848553-task-table.ts
+│   │   └── 1759154081649-add-task-indexes.ts
 │   ├── database.module.ts
 │   └── data-source.ts
 ├── common/                # Shared utilities
-│   └── decorators/        # Custom decorators
+│   ├── decorators/        # Custom decorators
+│       └── api-common-responses.decorator.ts
+│   └── interfaces/        # TypeScript interfaces
+│       └── authenticated-request.interface.ts
 ├── app.module.ts          # Root application module
 └── main.ts               # Application entry point
 ```
@@ -476,9 +535,9 @@ docker compose down
 
 The API implements comprehensive error handling:
 
-- **400 Bad Request**: Invalid input data or malformed requests
+- **400 Bad Request**: Invalid input data, malformed requests, or invalid user ID
 - **401 Unauthorized**: Missing or invalid JWT token
-- **404 Not Found**: Resource not found
+- **404 Not Found**: Resource not found or user doesn't have access
 - **409 Conflict**: Duplicate username during registration
 - **500 Internal Server Error**: Unexpected server errors
 
@@ -486,10 +545,30 @@ The API implements comprehensive error handling:
 
 - Password hashing using bcrypt (salt rounds: 10)
 - JWT token-based authentication with configurable expiration
+- **User isolation** - Users can only access their own tasks
+- **Database-level security** - Foreign key constraints prevent orphaned records
 - Request validation using class-validator
 - Environment variable protection for sensitive data
 - CORS protection (configurable)
 - Input sanitization and validation
+
+## Data Isolation & Privacy
+
+This API implements strict data isolation:
+
+- **Task Ownership**: Every task is associated with a specific user via `user_id`
+- **Automatic Filtering**: All task queries are automatically filtered by the authenticated user's ID
+- **Access Control**: Users cannot view, modify, or delete tasks belonging to other users
+- **Cascade Protection**: When a user account is deleted, all their tasks are automatically removed
+
+## Performance Optimizations
+
+The API includes several performance enhancements:
+
+- **Indexed Queries**: Composite indexes on frequently queried columns
+- **Trigram Matching**: Fast full-text search on task titles using PostgreSQL's pg_trgm extension
+- **Efficient Joins**: Optimized database relationships with proper foreign key indexes
+- **Query Optimization**: Status filters use exact matching instead of pattern matching
 
 ## API Testing
 
@@ -515,4 +594,15 @@ curl -X POST http://localhost:3000/auth/login \
 # Use token for authenticated requests
 curl -X GET http://localhost:3000/tasks \
   -H "Authorization: Bearer <your-jwt-token>"
+
+# Create a task
+curl -X POST http://localhost:3000/tasks \
+  -H "Authorization: Bearer <your-jwt-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Test Task",
+    "description": "Testing task creation",
+    "status": "TO_DO",
+    "expirationDate": "2025-12-31T23:59:59.000Z"
+  }'
 ```
