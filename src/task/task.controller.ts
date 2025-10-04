@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Request,
   Param,
   Patch,
   Post,
@@ -36,6 +37,7 @@ import {
   ApiInternalServerError,
   ApiNotFound,
 } from 'src/common/decorators/api-common-responses.decorator';
+import { AuthenticatedRequest } from 'src/common/interfaces/authenticated-request.interface';
 
 @ApiTags('Tasks')
 @Controller('tasks')
@@ -77,8 +79,13 @@ export class TaskController {
   })
   @ApiUnauthorized()
   @ApiInternalServerError()
-  public async findAll(@Query() params: FindAllParams): Promise<TaskDto[]> {
-    return await this.taskService.findAll(params);
+  public async findAll(
+    @Request() req: AuthenticatedRequest,
+    @Query() params: FindAllParams,
+  ): Promise<TaskDto[]> {
+    const userId = req.user.sub;
+
+    return await this.taskService.findAll(userId, params);
   }
 
   @Get('/:taskId')
@@ -100,8 +107,13 @@ export class TaskController {
   @ApiNotFound()
   @ApiInternalServerError()
   @ApiUnauthorized()
-  public async findOne(@Param('taskId') taskId: string): Promise<TaskDto> {
-    return await this.taskService.findOne(taskId);
+  public async findOne(
+    @Request() req: AuthenticatedRequest,
+    @Param('taskId') taskId: string,
+  ): Promise<TaskDto> {
+    const userId = req.user.sub;
+
+    return await this.taskService.findOne(userId, taskId);
   }
 
   @Post()
@@ -116,31 +128,60 @@ export class TaskController {
   })
   @ApiBadRequestResponse({
     description: 'Invalid input data - validation errors',
-    schema: {
-      type: 'object',
-      properties: {
-        message: {
-          type: 'array',
-          items: { type: 'string' },
-          example: [
-            'title must be shorter than or equal to 256 characters',
-            'title must be longer than or equal to 4 characters',
-            'title must be a string',
-            'description must be shorter than or equal to 512 characters',
-            'description must be longer than or equal to 6 characters',
-            'description must be a string',
-            'expirationDate must be a valid ISO 8601 date string',
-          ],
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            statusCode: { type: 'number', example: 400 },
+            error: { type: 'string', example: 'Bad Request' },
+            message: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+          },
         },
-        error: { type: 'string', example: 'Bad Request' },
-        statusCode: { type: 'number', example: 400 },
+        examples: {
+          bodyValidationErrors: {
+            summary: 'Request Body Validation Errors',
+            description: 'When request body fields fail validation rules',
+            value: {
+              message: [
+                'title must be shorter than or equal to 256 characters',
+                'title must be longer than or equal to 4 characters',
+                'title must be a string',
+                'description must be shorter than or equal to 512 characters',
+                'description must be longer than or equal to 6 characters',
+                'description must be a string',
+                'expirationDate must be a valid ISO 8601 date string',
+              ],
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+          invalidTaskId: {
+            summary: 'Invalid User ID Error',
+            description:
+              'When the user ID from JWT token violates foreign key constraint',
+            value: {
+              message: 'Invalid user ID',
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+        },
       },
     },
   })
   @ApiUnauthorized()
   @ApiInternalServerError()
-  public async create(@Body() task: CreateTaskDto): Promise<TaskDto> {
-    return await this.taskService.create(task);
+  public async create(
+    @Request() req: AuthenticatedRequest,
+    @Body() task: CreateTaskDto,
+  ): Promise<TaskDto> {
+    const userId = req.user.sub;
+
+    return await this.taskService.create(userId, task);
   }
 
   @Put('/:taskId')
@@ -159,7 +200,7 @@ export class TaskController {
     type: TaskDto,
   })
   @ApiBadRequestResponse({
-    description: 'Bad Request - Invalid input data',
+    description: 'Invalid input data - validation errors',
     content: {
       'application/json': {
         schema: {
@@ -209,10 +250,13 @@ export class TaskController {
   @ApiInternalServerError()
   @ApiUnauthorized()
   public async update(
+    @Request() req: AuthenticatedRequest,
     @Param('taskId') taskId: string,
     @Body() task: UpdateTaskDto,
   ): Promise<TaskDto> {
-    return await this.taskService.update(taskId, task);
+    const userId = req.user.sub;
+
+    return await this.taskService.update(userId, taskId, task);
   }
 
   @Patch('/:taskId')
@@ -235,10 +279,13 @@ export class TaskController {
   @ApiInternalServerError()
   @ApiUnauthorized()
   public async partialUpdate(
+    @Request() req: AuthenticatedRequest,
     @Param('taskId') taskId: string,
     @Body() task: PartialUpdateTaskDto,
   ): Promise<TaskDto> {
-    return await this.taskService.partialUpdate(taskId, task);
+    const userId = req.user.sub;
+
+    return await this.taskService.partialUpdate(userId, taskId, task);
   }
 
   @ApiOperation({
@@ -260,7 +307,12 @@ export class TaskController {
   @ApiInternalServerError()
   @ApiUnauthorized()
   @Delete('/:taskId')
-  public async delete(@Param('taskId') taskId: string): Promise<TaskDto> {
-    return this.taskService.delete(taskId);
+  public async delete(
+    @Request() req: AuthenticatedRequest,
+    @Param('taskId') taskId: string,
+  ): Promise<TaskDto> {
+    const userId = req.user.sub;
+
+    return this.taskService.delete(userId, taskId);
   }
 }

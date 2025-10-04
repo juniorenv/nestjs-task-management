@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
 
 @Entity({ name: 'tasks' })
 export class TaskEntity {
@@ -19,4 +26,11 @@ export class TaskEntity {
 
   @Column({ type: 'timestamptz', name: 'expiration_date' })
   expirationDate: Date;
+
+  @Column({ type: 'uuid', name: 'user_id' })
+  userId: string;
+
+  @ManyToOne(() => UserEntity, (user) => user.tasks)
+  @JoinColumn({ name: 'user_id' })
+  user: UserEntity;
 }

@@ -27,29 +27,55 @@ export class TaskService {
     private readonly tasksRepository: Repository<TaskEntity>,
   ) {}
 
-  public async findAll(params: FindAllParams): Promise<TaskDto[]> {
-    const searchParams: FindOptionsWhere<TaskDto> = {};
+  private mapEntityToDto(entity: TaskEntity): TaskDto {
+    return {
+      id: entity.id,
+      userId: entity.userId,
+      title: entity.title,
+      description: entity.description,
+      status: entity.status,
+      createdAt: entity.createdAt,
+      expirationDate: entity.expirationDate,
+    };
+  }
+
+  public async findAll(
+    userId: string,
+    params: FindAllParams,
+  ): Promise<TaskDto[]> {
+    const searchParams: FindOptionsWhere<TaskEntity> = {
+      userId,
+    };
 
     if (params.title) {
       searchParams.title = Like(`%${params.title}%`);
     }
 
     if (params.status) {
-      searchParams.status = Like(`%${params.status}%`);
+      searchParams.status = params.status;
     }
 
     const tasksFound = await this.tasksRepository.find({
       where: searchParams,
     });
 
-    return tasksFound;
+    return tasksFound.map((task) => this.mapEntityToDto(task));
   }
 
-  public async findOne(taskId: string): Promise<TaskDto> {
+  public async findOne(userId: string, taskId: string): Promise<TaskDto> {
+    const foundTask = await this.findTaskEntity(userId, taskId);
+    return this.mapEntityToDto(foundTask);
+  }
+
+  private async findTaskEntity(
+    userId: string,
+    taskId: string,
+  ): Promise<TaskEntity> {
     try {
       const foundTask = await this.tasksRepository.findOneOrFail({
         where: {
           id: taskId,
+          userId,
         },
       });
 
@@ -69,46 +95,60 @@ export class TaskService {
     }
   }
 
-  public async create(task: CreateTaskDto): Promise<TaskDto> {
+  public async create(userId: string, task: CreateTaskDto): Promise<TaskDto> {
     const dbTask = this.tasksRepository.create({
       title: task.title,
       description: task.description,
       status: task.status,
       expirationDate: task.expirationDate,
       createdAt: new Date(),
+      userId,
     });
 
-    const savedTask = await this.tasksRepository.save(dbTask);
-    return savedTask;
+    try {
+      const savedTask = await this.tasksRepository.save(dbTask);
+      return this.mapEntityToDto(savedTask);
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        if (error.message.includes('violates foreign key constraint')) {
+          throw new BadRequestException('Invalid user ID');
+        }
+      }
+      throw error;
+    }
   }
 
   public async update(
+    userId: string,
     taskId: string,
     updateTaskDto: UpdateTaskDto,
   ): Promise<TaskDto> {
-    const task = await this.findOne(taskId);
+    const task = await this.findTaskEntity(userId, taskId);
 
     const updatedTask = this.tasksRepository.merge(task, updateTaskDto);
 
-    return this.tasksRepository.save(updatedTask);
+    const savedTask = await this.tasksRepository.save(updatedTask);
+    return this.mapEntityToDto(savedTask);
   }
 
   public async partialUpdate(
+    userId: string,
     taskId: string,
     partialTaskDto: PartialUpdateTaskDto,
   ): Promise<TaskDto> {
-    const task = await this.findOne(taskId);
+    const task = await this.findTaskEntity(userId, taskId);
 
     const updatedTask = this.tasksRepository.merge(task, partialTaskDto);
 
-    return this.tasksRepository.save(updatedTask);
+    const savedTask = await this.tasksRepository.save(updatedTask);
+    return this.mapEntityToDto(savedTask);
   }
 
-  public async delete(taskId: string): Promise<TaskDto> {
-    const taskToDelete = await this.findOne(taskId);
+  public async delete(userId: string, taskId: string): Promise<TaskDto> {
+    const taskToDelete = await this.findTaskEntity(userId, taskId);
 
     await this.tasksRepository.remove(taskToDelete);
 
-    return taskToDelete;
+    return this.mapEntityToDto(taskToDelete);
   }
 }

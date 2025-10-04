@@ -74,6 +74,16 @@ export class TaskDto extends CreateTaskDto {
   })
   @IsDateString()
   createdAt: Date;
+
+  @ApiProperty({
+    description:
+      "Owner user's UUID for this task. Populated by the server from the authenticated JWT; clients must not include this field in requests.",
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    format: 'uuid',
+    readOnly: true,
+  })
+  @IsUUID()
+  userId: string;
 }
 
 export class UpdateTaskDto {
