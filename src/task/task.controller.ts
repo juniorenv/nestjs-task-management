@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import {
   CreateTaskDto,
-  FindAllParams,
+  FindAllTasksDto,
   PartialUpdateTaskDto,
   TaskDto,
   TaskStatusEnum,
@@ -81,7 +81,7 @@ export class TaskController {
   @ApiInternalServerError()
   public async findAll(
     @Request() req: AuthenticatedRequest,
-    @Query() params: FindAllParams,
+    @Query() params: FindAllTasksDto,
   ): Promise<TaskDto[]> {
     const userId = req.user.sub;
 
@@ -153,6 +153,7 @@ export class TaskController {
                 'description must be shorter than or equal to 512 characters',
                 'description must be longer than or equal to 6 characters',
                 'description must be a string',
+                'status must be one of the following values: TO_DO, IN_PROGRESS, DONE',
                 'expirationDate must be a valid ISO 8601 date string',
               ],
               error: 'Bad Request',
@@ -274,7 +275,53 @@ export class TaskController {
     description: 'Task updated successfully',
     type: TaskDto,
   })
-  @ApiBadRequest()
+  @ApiBadRequestResponse({
+    description: 'Invalid input data - validation errors',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            statusCode: { type: 'number', example: 400 },
+            error: { type: 'string', example: 'Bad Request' },
+            message: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+          },
+        },
+        examples: {
+          bodyValidationErrors: {
+            summary: 'Request Body Validation Errors',
+            description: 'When request body fields fail validation rules',
+            value: {
+              message: [
+                'title must be shorter than or equal to 256 characters',
+                'title must be longer than or equal to 4 characters',
+                'title must be a string',
+                'description must be shorter than or equal to 512 characters',
+                'description must be longer than or equal to 6 characters',
+                'description must be a string',
+                'status must be one of the following values: TO_DO, IN_PROGRESS, DONE',
+                'expirationDate must be a valid ISO 8601 date string',
+              ],
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+          invalidTaskId: {
+            summary: 'Invalid Task ID Parameter',
+            description: 'When the taskId parameter is not a valid UUID format',
+            value: {
+              message: 'Invalid task ID format: invalid-id',
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+        },
+      },
+    },
+  })
   @ApiNotFound()
   @ApiInternalServerError()
   @ApiUnauthorized()

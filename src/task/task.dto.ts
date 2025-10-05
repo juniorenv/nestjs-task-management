@@ -129,7 +129,17 @@ export class UpdateTaskDto {
 
 export class PartialUpdateTaskDto extends PartialType(UpdateTaskDto) {}
 
-export interface FindAllParams {
+export class FindAllTasksDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @MinLength(1)
+  @MaxLength(256)
+  @IsString()
   title?: string;
+
+  @ApiPropertyOptional({ enum: TaskStatusEnum })
+  @IsOptional()
+  @IsEnum(TaskStatusEnum)
+  @IsString()
   status?: string;
 }

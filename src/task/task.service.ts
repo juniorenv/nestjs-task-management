@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import {
   CreateTaskDto,
-  FindAllParams,
+  FindAllTasksDto,
   PartialUpdateTaskDto,
   TaskDto,
   UpdateTaskDto,
@@ -41,7 +41,7 @@ export class TaskService {
 
   public async findAll(
     userId: string,
-    params: FindAllParams,
+    params: FindAllTasksDto,
   ): Promise<TaskDto[]> {
     const searchParams: FindOptionsWhere<TaskEntity> = {
       userId,
