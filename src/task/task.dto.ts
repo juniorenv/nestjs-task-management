@@ -130,16 +130,24 @@ export class UpdateTaskDto {
 export class PartialUpdateTaskDto extends PartialType(UpdateTaskDto) {}
 
 export class FindAllTasksDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Filter tasks by title (partial match, case-sensitive)',
+    example: 'documentation',
+    minLength: 1,
+    maxLength: 256,
+  })
   @IsOptional()
   @MinLength(1)
   @MaxLength(256)
   @IsString()
   title?: string;
 
-  @ApiPropertyOptional({ enum: TaskStatusEnum })
+  @ApiPropertyOptional({
+    enum: TaskStatusEnum,
+    description: 'Filter tasks by exact status match',
+    example: TaskStatusEnum.TO_DO,
+  })
   @IsOptional()
   @IsEnum(TaskStatusEnum)
-  @IsString()
-  status?: string;
+  status?: TaskStatusEnum;
 }
