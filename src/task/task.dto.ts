@@ -1,12 +1,16 @@
 import { PartialType } from '@nestjs/swagger';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsDateString,
   IsEnum,
+  IsInt,
   IsOptional,
   IsString,
   IsUUID,
+  Max,
   MaxLength,
+  Min,
   MinLength,
 } from 'class-validator';
 
@@ -14,6 +18,11 @@ export enum TaskStatusEnum {
   TO_DO = 'TO_DO',
   IN_PROGRESS = 'IN_PROGRESS',
   DONE = 'DONE',
+}
+
+export enum OrderEnum {
+  ASC = 'ASC',
+  DESC = 'DESC',
 }
 
 export class CreateTaskDto {
@@ -129,7 +138,40 @@ export class UpdateTaskDto {
 
 export class PartialUpdateTaskDto extends PartialType(UpdateTaskDto) {}
 
-export class FindAllTasksDto {
+export class PageOptionsDto {
+  @ApiPropertyOptional({
+    minimum: 1,
+    default: 1,
+    description: 'Page number (1-indexed)',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @ApiPropertyOptional({
+    minimum: 1,
+    maximum: 50,
+    default: 10,
+    description: 'Number of items per page',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  limit: number = 10;
+
+  @ApiPropertyOptional({
+    enum: OrderEnum,
+    default: OrderEnum.DESC,
+  })
+  @IsEnum(OrderEnum)
+  order: OrderEnum = OrderEnum.DESC;
+}
+
+export class FindAllTasksDto extends PageOptionsDto {
   @ApiPropertyOptional({
     description: 'Filter tasks by title (partial match, case-sensitive)',
     example: 'documentation',
@@ -150,4 +192,75 @@ export class FindAllTasksDto {
   @IsOptional()
   @IsEnum(TaskStatusEnum)
   status?: TaskStatusEnum;
+}
+
+export class PageMetaDto {
+  @ApiProperty({
+    description: 'Current page number',
+    example: 1,
+  })
+  readonly page: number;
+
+  @ApiProperty({
+    description: 'Items per page',
+    example: 10,
+  })
+  readonly limit: number;
+
+  @ApiProperty({
+    description: 'Total number of items',
+    example: 10_000,
+  })
+  readonly itemCount: number;
+
+  @ApiProperty({
+    description: 'Total number of pages',
+    example: 1000,
+  })
+  readonly pageCount: number;
+
+  @ApiProperty({
+    description: 'Whether there is a previous page',
+    example: false,
+  })
+  readonly hasPreviousPage: boolean;
+
+  @ApiProperty({
+    description: 'Whether there is a next page',
+    example: true,
+  })
+  readonly hasNextPage: boolean;
+
+  constructor(pageOptions: PageOptionsDto, itemCount: number) {
+    this.page = pageOptions.page;
+    this.limit = pageOptions.limit;
+    this.itemCount = itemCount;
+    this.pageCount = Math.ceil(this.itemCount / this.limit);
+    this.hasPreviousPage = this.page > 1;
+    this.hasNextPage = this.page < this.pageCount;
+  }
+}
+
+export class PageDto<T> {
+  @ApiProperty({ isArray: true })
+  readonly data: T[];
+
+  @ApiProperty({ type: () => PageMetaDto })
+  readonly meta: PageMetaDto;
+
+  constructor(data: T[], meta: PageMetaDto) {
+    this.data = data;
+    this.meta = meta;
+  }
+}
+
+export class TaskPageDto {
+  @ApiProperty({
+    type: () => [TaskDto],
+    description: 'Array of tasks for the current page',
+  })
+  data: TaskDto[];
+
+  @ApiProperty({ type: () => PageMetaDto, description: 'Pagination metadata' })
+  meta: PageMetaDto;
 }
