@@ -14,8 +14,10 @@ import {
 import {
   CreateTaskDto,
   FindAllTasksDto,
+  PageDto,
   PartialUpdateTaskDto,
   TaskDto,
+  TaskPageDto,
   UpdateTaskDto,
 } from './task.dto';
 import { TaskService } from './task.service';
@@ -46,23 +48,22 @@ export class TaskController {
 
   @Get()
   @ApiOperation({
-    summary: 'Get all tasks',
-    description:
-      'Retrieve a list of tasks with optional filtering by title and status',
+    summary: 'Get all tasks with pagination',
+    description: 'Retrieve a paginated list of tasks with optional filtering',
   })
   @ApiOkResponse({
     description: 'Tasks retrieved successfully',
-    type: [TaskDto],
+    type: TaskPageDto,
   })
   @ApiUnauthorized()
   @ApiInternalServerError()
   public async findAll(
     @Request() req: AuthenticatedRequest,
-    @Query() params: FindAllTasksDto,
-  ): Promise<TaskDto[]> {
+    @Query() queryParams: FindAllTasksDto,
+  ): Promise<PageDto<TaskDto>> {
     const userId = req.user.sub;
 
-    return await this.taskService.findAll(userId, params);
+    return await this.taskService.findAll(userId, queryParams);
   }
 
   @Get('/:taskId')
