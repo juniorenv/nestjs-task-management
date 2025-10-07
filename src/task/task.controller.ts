@@ -16,7 +16,6 @@ import {
   FindAllTasksDto,
   PartialUpdateTaskDto,
   TaskDto,
-  TaskStatusEnum,
   UpdateTaskDto,
 } from './task.dto';
 import { TaskService } from './task.service';
@@ -28,7 +27,6 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import {
@@ -51,27 +49,6 @@ export class TaskController {
     summary: 'Get all tasks',
     description:
       'Retrieve a list of tasks with optional filtering by title and status',
-  })
-  @ApiQuery({
-    name: 'title',
-    required: false,
-    type: String,
-    description: 'Filter tasks by title (partial match, case-sensitive)',
-    schema: {
-      type: 'string',
-      minLength: 1,
-      maxLength: 256,
-    },
-  })
-  @ApiQuery({
-    name: 'status',
-    required: false,
-    enum: TaskStatusEnum,
-    description: 'Filter tasks by exact status match',
-    schema: {
-      type: 'string',
-      enum: Object.values(TaskStatusEnum),
-    },
   })
   @ApiOkResponse({
     description: 'Tasks retrieved successfully',
