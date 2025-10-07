@@ -6,6 +6,8 @@ import {
 import {
   CreateTaskDto,
   FindAllTasksDto,
+  PageDto,
+  PageMetaDto,
   PartialUpdateTaskDto,
   TaskDto,
   UpdateTaskDto,
@@ -41,25 +43,42 @@ export class TaskService {
 
   public async findAll(
     userId: string,
-    params: FindAllTasksDto,
-  ): Promise<TaskDto[]> {
+    queryParams: FindAllTasksDto,
+  ): Promise<PageDto<TaskDto>> {
     const searchParams: FindOptionsWhere<TaskEntity> = {
       userId,
     };
 
-    if (params.title) {
-      searchParams.title = Like(`%${params.title}%`);
+    if (queryParams.title) {
+      searchParams.title = Like(`%${queryParams.title}%`);
     }
 
-    if (params.status) {
-      searchParams.status = params.status;
+    if (queryParams.status) {
+      searchParams.status = queryParams.status;
     }
 
-    const tasksFound = await this.tasksRepository.find({
+    const skip = (queryParams.page - 1) * queryParams.limit;
+
+    const [tasksFound, itemCount] = await this.tasksRepository.findAndCount({
       where: searchParams,
+      take: queryParams.limit,
+      skip,
+      order: {
+        createdAt: queryParams.order,
+      },
     });
 
-    return tasksFound.map((task) => this.mapEntityToDto(task));
+    const taskDtos = tasksFound.map((task) => this.mapEntityToDto(task));
+    const pageMeta = new PageMetaDto(
+      {
+        page: queryParams.page,
+        limit: queryParams.limit,
+        order: queryParams.order,
+      },
+      itemCount,
+    );
+
+    return new PageDto(taskDtos, pageMeta);
   }
 
   public async findOne(userId: string, taskId: string): Promise<TaskDto> {
