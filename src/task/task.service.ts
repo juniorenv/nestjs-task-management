@@ -68,7 +68,15 @@ export class TaskService {
       },
     });
 
+    if (skip >= itemCount && itemCount > 0) {
+      const maxPage = Math.ceil(itemCount / queryParams.limit);
+      throw new BadRequestException(
+        `Page ${queryParams.page} exceeded maximum page ${maxPage}`,
+      );
+    }
+
     const taskDtos = tasksFound.map((task) => this.mapEntityToDto(task));
+
     const pageMeta = new PageMetaDto(
       {
         page: queryParams.page,
