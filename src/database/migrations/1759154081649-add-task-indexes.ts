@@ -11,11 +11,11 @@ export class AddTaskIndexes1759154081649 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-        CREATE INDEX IF NOT EXISTS idx_tasks_user_status ON tasks(user_id, status);
+        CREATE INDEX IF NOT EXISTS idx_tasks_user_id_status ON tasks(user_id, status);
     `);
 
     await queryRunner.query(`
-        CREATE INDEX IF NOT EXISTS idx_tasks_user_created_at ON tasks(user_id, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_tasks_user_id_created_at ON tasks(user_id, created_at DESC);
       `);
 
     await queryRunner.query(`
@@ -27,7 +27,9 @@ export class AddTaskIndexes1759154081649 implements MigrationInterface {
     await queryRunner.query(
       `DROP INDEX IF EXISTS idx_tasks_user_id_title_trgm;`,
     );
-    await queryRunner.query(`DROP INDEX IF EXISTS idx_tasks_user_status;`);
-    await queryRunner.query(`DROP INDEX IF EXISTS idx_tasks_user_created_at;`);
+    await queryRunner.query(`DROP INDEX IF EXISTS idx_tasks_user_id_status;`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS idx_tasks_user_id_created_at;`,
+    );
   }
 }
