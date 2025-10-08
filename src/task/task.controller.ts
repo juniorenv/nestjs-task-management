@@ -55,6 +55,51 @@ export class TaskController {
     description: 'Tasks retrieved successfully',
     type: TaskPageDto,
   })
+  @ApiBadRequestResponse({
+    description: 'Invalid pagination parameters or page number out of bounds',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            statusCode: { type: 'number', example: 400 },
+            error: { type: 'string', example: 'Bad Request' },
+            message: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+          },
+        },
+        examples: {
+          pageOutOfBounds: {
+            summary: 'Page Out of Bounds',
+            description:
+              'When the requested page number exceeds the maximum available pages',
+            value: {
+              message: 'Page 10 exceeds maximum page 3',
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+          paginationValidationErrors: {
+            summary: 'Pagination Validation Errors',
+            description: 'When pagination parameters fail validation rules',
+            value: {
+              message: [
+                'page must not be less than 1',
+                'page must be an integer number',
+                'limit must not be greater than 50',
+                'limit must not be less than 1',
+                'limit must be an integer number',
+              ],
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
+        },
+      },
+    },
+  })
   @ApiUnauthorized()
   @ApiInternalServerError()
   public async findAll(
