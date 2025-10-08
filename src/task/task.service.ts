@@ -14,13 +14,7 @@ import {
 } from './task.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TaskEntity } from 'src/database/entities/task.entity';
-import {
-  EntityNotFoundError,
-  FindOptionsWhere,
-  Like,
-  QueryFailedError,
-  Repository,
-} from 'typeorm';
+import { EntityNotFoundError, QueryFailedError, Repository } from 'typeorm';
 
 @Injectable()
 export class TaskService {
@@ -45,28 +39,31 @@ export class TaskService {
     userId: string,
     queryParams: FindAllTasksDto,
   ): Promise<PageDto<TaskDto>> {
-    const searchParams: FindOptionsWhere<TaskEntity> = {
-      userId,
-    };
+    const queryBuilder = this.tasksRepository
+      .createQueryBuilder('task')
+      .where('task.userId = :userId', { userId });
 
     if (queryParams.title) {
-      searchParams.title = Like(`%${queryParams.title}%`);
+      queryBuilder.andWhere('task.title LIKE :title', {
+        title: `%${queryParams.title}%`,
+      });
     }
 
     if (queryParams.status) {
-      searchParams.status = queryParams.status;
+      queryBuilder.andWhere('task.status = :status', {
+        status: queryParams.status,
+      });
     }
+
+    const itemCount = await queryBuilder.getCount();
 
     const skip = (queryParams.page - 1) * queryParams.limit;
 
-    const [tasksFound, itemCount] = await this.tasksRepository.findAndCount({
-      where: searchParams,
-      take: queryParams.limit,
-      skip,
-      order: {
-        createdAt: queryParams.order,
-      },
-    });
+    if (itemCount === 0 && queryParams.page > 1) {
+      throw new BadRequestException(
+        `No items found matching the criteria. Cannot access page ${queryParams.page}`,
+      );
+    }
 
     if (skip >= itemCount && itemCount > 0) {
       const maxPage = Math.ceil(itemCount / queryParams.limit);
@@ -74,6 +71,12 @@ export class TaskService {
         `Page ${queryParams.page} exceeded maximum page ${maxPage}`,
       );
     }
+
+    const tasksFound = await queryBuilder
+      .orderBy('task.createdAt', queryParams.order)
+      .skip(skip)
+      .take(queryParams.limit)
+      .getMany();
 
     const taskDtos = tasksFound.map((task) => this.mapEntityToDto(task));
 
