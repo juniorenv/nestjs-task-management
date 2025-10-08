@@ -15,6 +15,10 @@ export class AddTaskIndexes1759154081649 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
+        CREATE INDEX IF NOT EXISTS idx_tasks_user_created_at ON tasks(user_id, created_at DESC);
+      `);
+
+    await queryRunner.query(`
         CREATE INDEX IF NOT EXISTS idx_tasks_user_id_title_trgm ON tasks USING GIN (user_id, title gin_trgm_ops);
     `);
   }
@@ -24,5 +28,6 @@ export class AddTaskIndexes1759154081649 implements MigrationInterface {
       `DROP INDEX IF EXISTS idx_tasks_user_id_title_trgm;`,
     );
     await queryRunner.query(`DROP INDEX IF EXISTS idx_tasks_user_status;`);
+    await queryRunner.query(`DROP INDEX IF EXISTS idx_tasks_user_created_at;`);
   }
 }
