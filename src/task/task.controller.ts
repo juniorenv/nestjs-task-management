@@ -81,6 +81,17 @@ export class TaskController {
               statusCode: 400,
             },
           },
+          noItemsFound: {
+            summary: 'No Items with High Page Number',
+            description:
+              'When filtering returns no results but page > 1 is requested',
+            value: {
+              message:
+                'No items found matching the criteria. Cannot access page 2',
+              error: 'Bad Request',
+              statusCode: 400,
+            },
+          },
           paginationValidationErrors: {
             summary: 'Pagination Validation Errors',
             description: 'When pagination parameters fail validation rules',
