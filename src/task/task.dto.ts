@@ -174,7 +174,7 @@ export class PageOptionsDto {
 
 export class FindAllTasksDto extends PageOptionsDto {
   @ApiPropertyOptional({
-    description: 'Filter tasks by title (partial match, case-sensitive)',
+    description: 'Filter tasks by title (partial match, case-insensitive)',
     example: 'documentation',
     minLength: 1,
     maxLength: 256,

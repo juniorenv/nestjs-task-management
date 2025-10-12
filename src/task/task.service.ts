@@ -44,7 +44,7 @@ export class TaskService {
       .where('task.userId = :userId', { userId });
 
     if (queryParams.title) {
-      queryBuilder.andWhere('task.title LIKE :title', {
+      queryBuilder.andWhere('task.title ILIKE :title', {
         title: `%${queryParams.title}%`,
       });
     }
