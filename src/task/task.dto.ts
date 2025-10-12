@@ -56,7 +56,7 @@ export class CreateTaskDto {
   })
   @IsEnum(TaskStatusEnum)
   @IsOptional()
-  status: string;
+  status: TaskStatusEnum;
 
   @ApiProperty({
     description: 'Task expiration date',
@@ -166,6 +166,7 @@ export class PageOptionsDto {
   @ApiPropertyOptional({
     enum: OrderEnum,
     default: OrderEnum.DESC,
+    description: 'Sort order by creation date',
   })
   @IsEnum(OrderEnum)
   order: OrderEnum = OrderEnum.DESC;

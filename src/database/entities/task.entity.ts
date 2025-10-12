@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
+import { TaskStatusEnum } from 'src/task/task.dto';
 
 @Entity({ name: 'tasks' })
 export class TaskEntity {
@@ -19,7 +20,7 @@ export class TaskEntity {
   description: string;
 
   @Column({ type: 'varchar', default: 'TO_DO' })
-  status: string;
+  status: TaskStatusEnum;
 
   @Column({ type: 'timestamptz', name: 'created_at' })
   createdAt: Date;

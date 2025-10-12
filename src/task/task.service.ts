@@ -68,7 +68,7 @@ export class TaskService {
     if (skip >= itemCount && itemCount > 0) {
       const maxPage = Math.ceil(itemCount / queryParams.limit);
       throw new BadRequestException(
-        `Page ${queryParams.page} exceeded maximum page ${maxPage}`,
+        `Page ${queryParams.page} exceeds maximum page ${maxPage}`,
       );
     }
 
