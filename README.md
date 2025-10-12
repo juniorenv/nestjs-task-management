@@ -18,17 +18,18 @@
 ![Bcrypt][BCRYPT__BADGE]
 ![Swagger][SWAGGER__BADGE]
 
-A robust task management REST API built with NestJS, TypeORM, and PostgreSQL. Features JWT authentication, user-specific task isolation, comprehensive CRUD operations, interactive Swagger documentation, and Docker containerization.
+A robust task management REST API built with NestJS, TypeORM, and PostgreSQL. Features JWT authentication, user-specific task isolation, pagination support, comprehensive CRUD operations, interactive Swagger documentation, and Docker containerization.
 
 ## Features
 
 - JWT-based authentication system
 - User registration and login
 - **User-specific task management** - Each user can only access and manage their own tasks
+- **Pagination support** - Efficient data retrieval with configurable page size and sorting
 - Complete task management (Create, Read, Update, Delete)
 - Task filtering by title and status
 - **Database relationship management** - Foreign key constraints and cascading deletes
-- **Performance optimization** - Indexed queries for faster searches
+- **Performance optimization** - Indexed queries for faster searches and sorting
 - **Interactive Swagger API documentation at `/docs`**
 - PostgreSQL database with migrations
 - Docker support with multi-stage builds
@@ -295,17 +296,47 @@ Authorization: Bearer <your-jwt-token>
 
 **Important**: Each user can only access and manage their own tasks. The API automatically filters tasks based on the authenticated user.
 
-#### Get All Tasks
+#### Get All Tasks (with Pagination)
 
 ```http
 GET /tasks
-GET /tasks?title=example&status=TO_DO
+GET /tasks?page=1&limit=10&order=DESC
+GET /tasks?title=example&status=TO_DO&page=2&limit=20
 ```
 
 **Query Parameters:**
 
-- `title` (optional): Filter tasks by title (partial match)
-- `status` (optional): Filter tasks by exact status match
+- `page` (optional, default: 1): Page number (1-indexed)
+- `limit` (optional, default: 10, max: 50): Number of items per page
+- `order` (optional, default: DESC): Sort order by creation date (ASC or DESC)
+- `title` (optional): Filter tasks by title (partial match, case-insensitive)
+- `status` (optional): Filter tasks by exact status match (TO_DO, IN_PROGRESS, DONE)
+
+**Response:**
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "userId": "user-uuid",
+      "title": "Complete project documentation",
+      "description": "Write comprehensive README",
+      "status": "TO_DO",
+      "expirationDate": "2024-12-31T23:59:59.000Z",
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "itemCount": 100,
+    "pageCount": 10,
+    "hasPreviousPage": false,
+    "hasNextPage": true
+  }
+}
+```
 
 **Note**: Only returns tasks belonging to the authenticated user.
 
@@ -402,6 +433,25 @@ All successful responses return JSON with the requested data. Error responses fo
 }
 ```
 
+### Pagination Details
+
+The API uses offset-based pagination with the following characteristics:
+
+- **Default page size**: 10 items
+- **Maximum page size**: 50 items
+- **Page numbering**: 1-indexed (first page is page 1, not 0)
+- **Sorting**: Tasks are sorted by creation date (newest first by default)
+- **Out of bounds**: Returns 400 error if requesting a page beyond available data
+
+**Pagination Metadata:**
+
+- `page`: Current page number
+- `limit`: Items per page
+- `itemCount`: Total number of items matching the filter
+- `pageCount`: Total number of pages available
+- `hasPreviousPage`: Boolean indicating if previous page exists
+- `hasNextPage`: Boolean indicating if next page exists
+
 ## Database Schema
 
 ### Users Table
@@ -428,9 +478,10 @@ All successful responses return JSON with the requested data. Error responses fo
 
 ### Database Indexes
 
-For optimal query performance:
+For optimal query performance, especially with pagination:
 
-- **idx_tasks_user_status**: Composite index on `(user_id, status)` for filtered task queries
+- **idx_tasks_user_id_status**: Composite index on `(user_id, status)` for filtered task queries
+- **idx_tasks_user_id_created_at**: Composite index on `(user_id, created_at DESC)` for efficient pagination and sorting
 - **idx_tasks_user_id_title_trgm**: GIN index on `(user_id, title)` for fast title searches using trigram matching
 
 ### PostgreSQL Extensions
@@ -495,7 +546,7 @@ src/
 │   ├── migrations/        # Database migrations
 │   │   ├── 1756494841652-user-table.ts
 │   │   ├── 1756494848553-task-table.ts
-│   │   └── 1759154081649-add-task-indexes.ts
+│   │   └── 1759154081649-add-task-indexes.ts  # Pagination indexes
 │   ├── database.module.ts
 │   └── data-source.ts
 ├── common/                # Shared utilities
@@ -535,11 +586,16 @@ docker compose down
 
 The API implements comprehensive error handling:
 
-- **400 Bad Request**: Invalid input data, malformed requests, or invalid user ID
+- **400 Bad Request**: Invalid input data, malformed requests, invalid user ID, or page out of bounds
 - **401 Unauthorized**: Missing or invalid JWT token
 - **404 Not Found**: Resource not found or user doesn't have access
 - **409 Conflict**: Duplicate username during registration
 - **500 Internal Server Error**: Unexpected server errors
+
+### Pagination Error Responses
+
+- **Page exceeds maximum**: When requesting a page number beyond available data
+- **Validation errors**: When pagination parameters (page, limit) fail validation rules
 
 ## Security Features
 
@@ -565,10 +621,12 @@ This API implements strict data isolation:
 
 The API includes several performance enhancements:
 
+- **Paginated Results**: Efficient data retrieval with configurable page sizes to prevent large result sets
 - **Indexed Queries**: Composite indexes on frequently queried columns
 - **Trigram Matching**: Fast full-text search on task titles using PostgreSQL's pg_trgm extension
 - **Efficient Joins**: Optimized database relationships with proper foreign key indexes
 - **Query Optimization**: Status filters use exact matching instead of pattern matching
+- **Case-Insensitive Search**: Title filtering uses ILIKE for better user experience
 
 ## API Testing
 
@@ -577,6 +635,7 @@ The API includes several performance enhancements:
 1. Navigate to `http://localhost:3000/docs`
 2. Use the interactive interface to test all endpoints
 3. Authenticate once and test multiple endpoints seamlessly
+4. Test pagination by adjusting page, limit, and order parameters
 
 ### Using cURL
 
@@ -591,8 +650,12 @@ curl -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "testuser", "password": "password123"}'
 
-# Use token for authenticated requests
-curl -X GET http://localhost:3000/tasks \
+# Get tasks with pagination (first page, 10 items)
+curl -X GET "http://localhost:3000/tasks?page=1&limit=10&order=DESC" \
+  -H "Authorization: Bearer <your-jwt-token>"
+
+# Get tasks with filtering and pagination
+curl -X GET "http://localhost:3000/tasks?title=project&status=TO_DO&page=1&limit=20" \
   -H "Authorization: Bearer <your-jwt-token>"
 
 # Create a task
