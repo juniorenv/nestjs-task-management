@@ -24,12 +24,57 @@ export function ApiInternalServerError() {
 export function ApiUnauthorized() {
   return applyDecorators(
     ApiUnauthorizedResponse({
-      description: 'Unauthorized - Invalid or missing JWT token',
-      schema: {
-        type: 'object',
-        properties: {
-          message: { type: 'string', example: 'Unauthorized' },
-          statusCode: { type: 'number', example: 401 },
+      description:
+        'Authentication failed - Invalid, expired, or missing JWT token',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              message: { type: 'string' },
+              statusCode: { type: 'number', example: 401 },
+            },
+          },
+          examples: {
+            missingToken: {
+              summary: 'Missing Authorization Token',
+              description: 'No token provided in the Authorization header',
+              value: {
+                message: 'Token not provided',
+                error: 'Unauthorized',
+                statusCode: 401,
+              },
+            },
+            expiredToken: {
+              summary: 'Expired Token',
+              description:
+                'The JWT token has expired and needs to be refreshed',
+              value: {
+                message: 'Token expired',
+                error: 'Unauthorized',
+                statusCode: 401,
+              },
+            },
+            invalidToken: {
+              summary: 'Invalid Token',
+              description:
+                'The JWT token is malformed or has an invalid signature',
+              value: {
+                message: 'Invalid token',
+                error: 'Unauthorized',
+                statusCode: 401,
+              },
+            },
+            authenticationFailed: {
+              summary: 'Authentication Failed',
+              description: 'General authentication error',
+              value: {
+                message: 'Authentication failed',
+                error: 'Unauthorized',
+                statusCode: 401,
+              },
+            },
+          },
         },
       },
     }),
