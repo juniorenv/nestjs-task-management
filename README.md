@@ -587,10 +587,32 @@ docker compose down
 The API implements comprehensive error handling:
 
 - **400 Bad Request**: Invalid input data, malformed requests, invalid user ID, or page out of bounds
-- **401 Unauthorized**: Missing or invalid JWT token
+- **401 Unauthorized**: Authentication errors with specific error messages
 - **404 Not Found**: Resource not found or user doesn't have access
 - **409 Conflict**: Duplicate username during registration
 - **500 Internal Server Error**: Unexpected server errors
+
+### Authentication Error Responses (401)
+
+The API provides specific error messages for different authentication failures:
+
+| Error Message           | Cause                                | Solution                                       |
+| ----------------------- | ------------------------------------ | ---------------------------------------------- |
+| `Token not provided`    | No Authorization header sent         | Include `Authorization: Bearer <token>` header |
+| `Token expired`         | JWT token has passed expiration time | Login again to obtain a new token              |
+| `Invalid token`         | Malformed JWT or invalid signature   | Verify token format and validity               |
+| `Authentication failed` | Unexpected authentication error      | Check server logs or contact support           |
+| `Unauthorized`          | Invalid credentials during login     | Verify username and password are correct       |
+
+**Example Error Response:**
+
+```json
+{
+  "message": "Token expired",
+  "error": "Unauthorized",
+  "statusCode": 401
+}
+```
 
 ### Pagination Error Responses
 
