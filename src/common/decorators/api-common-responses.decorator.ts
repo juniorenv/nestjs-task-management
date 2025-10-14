@@ -81,6 +81,22 @@ export function ApiUnauthorized() {
   );
 }
 
+export function ApiLoginUnauthorized() {
+  return applyDecorators(
+    ApiUnauthorizedResponse({
+      description: 'Authentication failed - Invalid credentials provided',
+      schema: {
+        type: 'object',
+        properties: {
+          message: { type: 'string', example: 'Authentication failed' },
+          error: { type: 'string', example: 'Unauthorized' },
+          statusCode: { type: 'number', example: 401 },
+        },
+      },
+    }),
+  );
+}
+
 export function ApiNotFound() {
   return applyDecorators(
     ApiNotFoundResponse({
